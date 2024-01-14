@@ -133,16 +133,22 @@ def remove_duplicates(playlist: tv_playlist.M3UPlaylist):
 
 def process(arguments):
     debug("Processing...")
-    playlist = tv_playlist.loadf(str(arguments.input))
     
+    try:
+        playlist = tv_playlist.loadf(str(arguments.input))
+    except UnicodeDecodeError:
+        print("Your playlist is not UTF-8 encoded, or has invalid characters. Please convert it to UTF-8.")
+        exit(1)
+    except Exception as e:
+        print("Something went wrong while loading playlist.")
+        print(e)
+        exit(1)
+        
     remove_duplicates(playlist)
     
     # save playlist
     with open(arguments.input, "w+") as f:
-        if arguments.m3u_plus:
-            f.write(playlist.to_m3u_plus_playlist())
-        else:
-            f.write(playlist.to_m3u8_playlist())
+        f.write(playlist.to_m3u_plus_playlist())
         
     print("All done!")
     print("Thanks for using this script!")
