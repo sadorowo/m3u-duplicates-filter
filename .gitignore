@@ -1,0 +1,7 @@
+.venv
+bin
+include
+lib
+__pycache__
+pyvenv.cfg
+.DS_Store
