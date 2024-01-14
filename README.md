@@ -13,7 +13,7 @@ This script is in BETA phase. Please report any bugs!
 
 ### Usage
 ```bash
-python3 <path-to-script> -i "<m3u path>" (-v)
+python3 <path-to-script> -m "<m3u path>" (-v)
 ```
 
 ### Result
