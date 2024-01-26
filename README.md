@@ -1,4 +1,4 @@
-## M3U+ Duplicates Filter
+## M3U Duplicates Filter
 
 Simple script that will remove worse qualities from your M3U8 list, if detected.
 
