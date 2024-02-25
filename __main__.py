@@ -158,7 +158,7 @@ def process(arguments):
     remove_duplicates(playlist)
     
     # save playlist
-    with open(arguments.input, "w+") as f:
+    with open(arguments.input, "w+", encoding="utf-8") as f:
         f.write(playlist.to_m3u_plus_playlist())
         
     print("All done!")
