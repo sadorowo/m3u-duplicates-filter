@@ -47,41 +47,49 @@ def truncate_channel_quality(channel_name: str):
 def real_name(channel: tv_playlist.IPTVChannel):
     return channel.name.split(",")[-1]
 
+def is_copy_quality_better(original, copy):
+    real_name_original = real_name(original)
+    real_name_copy = real_name(copy)
+
+    original_quality = get_channel_quality(real_name_original)
+    copy_quality = get_channel_quality(real_name_copy)
+
+    if (
+        # Original quality and copy quality is not None
+        original_quality
+        and copy_quality
+        # Qualities are not equal
+        and original_quality != copy_quality
+        # Channel name is the same
+        and truncate_channel_quality(real_name_original) == truncate_channel_quality(real_name_copy)
+        # Qualities are in list
+        and original_quality in SORTED_QUALITIES
+        and copy_quality in SORTED_QUALITIES
+        # Copy quality is better
+        and SORTED_QUALITIES.index(original_quality) < SORTED_QUALITIES.index(copy_quality)
+    ):
+        return True
+
+    return False
+
 def find_duplicate_quality(playlist: tv_playlist.M3UPlaylist):
     channels = playlist.get_channels()
     
-    for c in channels:
-        # Check:
-        # example: TVP1 HD & TVP1 FHD -> remove TVP1 HD.
-        # example: TVP1 FHD & TVP1 HD -> remove TVP1 HD.
-        # example: TVP1 4K+ & TVP1 HD -> remove TVP1 HD.
-        
+    for channel in channels:
         if any([
-            ca for ca in channels 
-            if 
-                # Check if quality isn't the same
-                get_channel_quality(real_name(c)) != 
-                get_channel_quality(real_name(ca)) !=
-                None
-            and
-                # Check if channel name is the same
-                truncate_channel_quality(real_name(c)) ==
-                truncate_channel_quality(real_name(ca))
-            and
-                # Check if quality is better
-                SORTED_QUALITIES.index(get_channel_quality(real_name(c))) <
-                SORTED_QUALITIES.index(get_channel_quality(real_name(ca)))
+            copy for copy in channels
+            if is_copy_quality_better(channel, copy)
         ]):
-            debug(f"Found duplicate quality for {real_name(c)}")
+            debug(f"Found duplicate quality for {real_name(channel)}")
             worse_qualities = get_worse_qualities(
                 playlist = playlist, 
-                channel = c
+                channel = channel
             )
             
             if len(worse_qualities) == 0:
                 continue
             
-            yield c, worse_qualities
+            yield channel, worse_qualities
             
 def get_worse_qualities(playlist: tv_playlist.M3UPlaylist, channel: tv_playlist.IPTVChannel):
     # Example:
@@ -92,13 +100,16 @@ def get_worse_qualities(playlist: tv_playlist.M3UPlaylist, channel: tv_playlist.
     sorted_channels = [c for c in playlist 
                        if truncate_channel_quality(real_name(c)) == 
                        truncate_channel_quality(real_name(channel))]
+
+    channel_quality = get_channel_quality(real_name(channel))
     qualities = []
     
     for quality in SORTED_QUALITIES:
         for c in sorted_channels:
             if c.name.endswith(quality) and \
                 SORTED_QUALITIES.index(quality) > \
-                SORTED_QUALITIES.index(get_channel_quality(real_name(channel))):
+                SORTED_QUALITIES.index(channel_quality) and \
+                quality not in qualities:
                     
                 qualities.append(quality)
     
